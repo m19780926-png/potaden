@@ -4,115 +4,151 @@
     <meta charset="UTF-8">
     <title>ポタ電 残電力計算ツール</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             margin: 0;
             padding: 0;
-            background: #0f172a;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             color: #e5e7eb;
         }
+
         .container {
             max-width: 480px;
             margin: 0 auto;
-            padding: 16px;
+            padding: 20px;
         }
+
+        /* ガラス風カード */
         .card {
-            background: #1f2937;
-            border-radius: 16px;
-            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 12px 30px rgba(0,0,0,0.35);
-            margin-top: 16px;
+            animation: fadeUp 0.4s ease;
         }
+
+        /* 見出しにアクセントライン */
         h1 {
             font-size: 1.4rem;
-            margin: 0 0 8px;
+            margin: 0 0 12px;
+            padding-left: 10px;
+            border-left: 4px solid #38bdf8;
         }
+
         .subtitle {
             font-size: 0.85rem;
             color: #9ca3af;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
-        label {
-            font-size: 0.9rem;
-            display: block;
-            margin-bottom: 6px;
-        }
-        select, input[type="number"] {
+
+        /* 入力欄：モダンUI */
+        input, select {
             width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #4b5563;
-            background: #111827;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.08);
             color: #e5e7eb;
-            font-size: 0.95rem;
-            box-sizing: border-box;
+            font-size: 1rem;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+            transition: 0.2s;
         }
-        select:focus, input:focus {
+
+        input:focus, select:focus {
+            box-shadow: inset 0 0 0 2px #38bdf8;
             outline: none;
-            border-color: #38bdf8;
         }
+
         .row {
-            margin-top: 12px;
+            margin-top: 14px;
         }
+
+        /* グラデーションボタン */
         .btn {
             width: 100%;
-            margin-top: 14px;
-            padding: 11px;
+            margin-top: 18px;
+            padding: 12px;
             border-radius: 999px;
             border: none;
             background: linear-gradient(135deg, #22c55e, #38bdf8);
             color: #0b1120;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1rem;
             cursor: pointer;
+            transition: 0.15s;
         }
+
         .btn:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
+
+        /* 結果カード */
         .result {
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 12px;
-            background: #030712;
-            border: 1px solid #374151;
-            font-size: 0.9rem;
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 14px;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.12);
+            animation: fadeUp 0.35s ease;
         }
+
         .result-title {
             font-weight: 600;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
+
         .result-item {
             display: flex;
             justify-content: space-between;
-            margin: 2px 0;
+            margin: 4px 0;
         }
+
         .result-label {
             color: #9ca3af;
         }
+
         .result-value {
             font-weight: 600;
         }
+
         .small {
             font-size: 0.8rem;
             color: #6b7280;
-            margin-top: 6px;
+            margin-top: 8px;
         }
+
         .footer {
-            margin-top: 18px;
+            margin-top: 20px;
             font-size: 0.75rem;
             color: #6b7280;
             text-align: center;
         }
+
+        /* フェードアップアニメーション */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
+
 <body>
 <div class="container">
     <div class="card">
         <h1>ポタ電 残電力計算ツール</h1>
         <div class="subtitle">
             EcoFlow DELTA 2 / RIVER 2 の％表示から<br>
-            残り電力(Wh)をざっくり計算します。
+            残り電力(Wh)を計算します。
         </div>
 
         <div class="row">
@@ -137,38 +173,42 @@
 
         <div id="result" class="result" style="display:none;">
             <div class="result-title">計算結果</div>
+
             <div class="result-item">
                 <span class="result-label">選択モデル</span>
                 <span class="result-value" id="rModel"></span>
             </div>
+
             <div class="result-item">
                 <span class="result-label">残量％</span>
                 <span class="result-value" id="rPercent"></span>
             </div>
+
             <div class="result-item">
                 <span class="result-label">残り電力</span>
                 <span class="result-value" id="rWh"></span>
             </div>
+
             <div class="result-item" id="timeRow" style="display:none;">
-                <span class="result-label">その家電が使える目安時間</span>
+                <span class="result-label">使用可能時間</span>
                 <span class="result-value" id="rTime"></span>
             </div>
+
             <div class="small">
-                ※実際の使用時間は変換ロスや負荷変動で前後します。<br>
-                あくまで目安として使ってください。
+                ※実際の使用時間は変換ロスや負荷変動で前後します。
             </div>
         </div>
     </div>
 
     <div class="footer">
-        © ポタ電残量計算ツール
+        © Portable Power Calculator
     </div>
 </div>
 
 <script>
 function getCapacityWh(model) {
-    if (model === "DELTA2") return 1024; // EcoFlow DELTA 2
-    if (model === "RIVER2") return 256;  // EcoFlow RIVER 2
+    if (model === "DELTA2") return 1024;
+    if (model === "RIVER2") return 256;
     return 0;
 }
 
@@ -200,5 +240,6 @@ function calc() {
     }
 }
 </script>
+
 </body>
 </html>
