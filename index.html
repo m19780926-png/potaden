@@ -150,9 +150,26 @@
 
         <div class="row">
             <label for="model">ポタ電モデル</label>
-            <select id="model">
+            <select id="model" onchange="toggleCustomCapacity()">
                 <option value="DELTA2">EcoFlow DELTA 2 (1024Wh)</option>
+                <option value="DELTA2MAX">EcoFlow DELTA 2 Max (2048Wh)</option>
                 <option value="RIVER2">EcoFlow RIVER 2 (256Wh)</option>
+                <option value="RIVER2PRO">EcoFlow RIVER 2 Pro (768Wh)</option>
+                <option value="CUSTOM">容量を直接入力</option>
+            </select>
+        </div>
+
+        <div class="row" id="customCapacityRow" style="display:none;">
+            <label for="customCapacity">バッテリー容量（Wh）</label>
+            <input id="customCapacity" type="number" min="1" placeholder="例：512">
+        </div>
+
+        <div class="row">
+            <label for="outputType">出力の種類（変換効率）</label>
+            <select id="outputType">
+                <option value="0.85">AC出力（効率 約85%）</option>
+                <option value="0.90">DC／USB出力（効率 約90%）</option>
+                <option value="1.0">公称容量そのまま（効率100%で計算）</option>
             </select>
         </div>
 
@@ -203,16 +220,41 @@
 </div>
 
 <script>
+const MODEL_INFO = {
+    DELTA2:    { name: "EcoFlow DELTA 2",     capacity: 1024 },
+    DELTA2MAX: { name: "EcoFlow DELTA 2 Max", capacity: 2048 },
+    RIVER2:    { name: "EcoFlow RIVER 2",     capacity: 256 },
+    RIVER2PRO: { name: "EcoFlow RIVER 2 Pro", capacity: 768 },
+    CUSTOM:    { name: "容量直接入力",        capacity: 0 }
+};
+
+function toggleCustomCapacity() {
+    const model = document.getElementById("model").value;
+    document.getElementById("customCapacityRow").style.display =
+        model === "CUSTOM" ? "block" : "none";
+}
+
 function getCapacityWh(model) {
-    if (model === "DELTA2") return 1024;
-    if (model === "RIVER2") return 256;
-    return 0;
+    if (model === "CUSTOM") {
+        return parseFloat(document.getElementById("customCapacity").value);
+    }
+    const info = MODEL_INFO[model];
+    return info ? info.capacity : 0;
+}
+
+function formatHours(hours) {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 60) return (h + 1) + " 時間 0 分（約 " + hours.toFixed(2) + " 時間）";
+    if (h === 0) return m + " 分（約 " + hours.toFixed(2) + " 時間）";
+    return h + " 時間 " + m + " 分（約 " + hours.toFixed(2) + " 時間）";
 }
 
 function calc() {
     const model = document.getElementById("model").value;
     const percent = parseFloat(document.getElementById("percent").value);
     const loadW = parseFloat(document.getElementById("load").value);
+    const efficiency = parseFloat(document.getElementById("outputType").value);
 
     if (isNaN(percent) || percent < 0 || percent > 100) {
         alert("残量％は 0〜100 の範囲で入力してください。");
@@ -220,18 +262,24 @@ function calc() {
     }
 
     const capacity = getCapacityWh(model);
-    const remainWh = capacity * (percent / 100);
+    if (isNaN(capacity) || capacity <= 0) {
+        alert("バッテリー容量（Wh）を入力してください。");
+        return;
+    }
+
+    const remainWhNominal = capacity * (percent / 100);
+    const remainWh = remainWhNominal * efficiency;
 
     document.getElementById("result").style.display = "block";
-    document.getElementById("rModel").textContent =
-        model === "DELTA2" ? "EcoFlow DELTA 2" : "EcoFlow RIVER 2";
+    document.getElementById("rModel").textContent = MODEL_INFO[model].name;
     document.getElementById("rPercent").textContent = percent.toFixed(1) + " %";
-    document.getElementById("rWh").textContent = remainWh.toFixed(1) + " Wh";
+    document.getElementById("rWh").textContent =
+        remainWh.toFixed(1) + " Wh（公称 " + remainWhNominal.toFixed(1) + " Wh × 効率 " + Math.round(efficiency * 100) + "%）";
 
     if (!isNaN(loadW) && loadW > 0) {
         const hours = remainWh / loadW;
         document.getElementById("timeRow").style.display = "flex";
-        document.getElementById("rTime").textContent = hours.toFixed(2) + " 時間";
+        document.getElementById("rTime").textContent = formatHours(hours);
     } else {
         document.getElementById("timeRow").style.display = "none";
     }
