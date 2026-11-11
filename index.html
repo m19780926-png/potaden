@@ -150,18 +150,10 @@
 
         <div class="row">
             <label for="model">ポタ電モデル</label>
-            <select id="model" onchange="toggleCustomCapacity()">
+            <select id="model">
                 <option value="DELTA2">EcoFlow DELTA 2 (1024Wh)</option>
-                <option value="DELTA2MAX">EcoFlow DELTA 2 Max (2048Wh)</option>
                 <option value="RIVER2">EcoFlow RIVER 2 (256Wh)</option>
-                <option value="RIVER2PRO">EcoFlow RIVER 2 Pro (768Wh)</option>
-                <option value="CUSTOM">容量を直接入力</option>
             </select>
-        </div>
-
-        <div class="row" id="customCapacityRow" style="display:none;">
-            <label for="customCapacity">バッテリー容量（Wh）</label>
-            <input id="customCapacity" type="number" min="1" placeholder="例：512">
         </div>
 
         <div class="row">
@@ -221,23 +213,11 @@
 
 <script>
 const MODEL_INFO = {
-    DELTA2:    { name: "EcoFlow DELTA 2",     capacity: 1024 },
-    DELTA2MAX: { name: "EcoFlow DELTA 2 Max", capacity: 2048 },
-    RIVER2:    { name: "EcoFlow RIVER 2",     capacity: 256 },
-    RIVER2PRO: { name: "EcoFlow RIVER 2 Pro", capacity: 768 },
-    CUSTOM:    { name: "容量直接入力",        capacity: 0 }
+    DELTA2: { name: "EcoFlow DELTA 2", capacity: 1024 },
+    RIVER2: { name: "EcoFlow RIVER 2", capacity: 256 }
 };
 
-function toggleCustomCapacity() {
-    const model = document.getElementById("model").value;
-    document.getElementById("customCapacityRow").style.display =
-        model === "CUSTOM" ? "block" : "none";
-}
-
 function getCapacityWh(model) {
-    if (model === "CUSTOM") {
-        return parseFloat(document.getElementById("customCapacity").value);
-    }
     const info = MODEL_INFO[model];
     return info ? info.capacity : 0;
 }
@@ -262,10 +242,6 @@ function calc() {
     }
 
     const capacity = getCapacityWh(model);
-    if (isNaN(capacity) || capacity <= 0) {
-        alert("バッテリー容量（Wh）を入力してください。");
-        return;
-    }
 
     const remainWhNominal = capacity * (percent / 100);
     const remainWh = remainWhNominal * efficiency;
